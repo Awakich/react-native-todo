@@ -1,11 +1,14 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Button, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { TodoI } from './models';
+import InputItem from './components/InputItem';
+import Input from './components/Input';
 
 export default function App() {
 
   const [userInput, setUserInput] = useState<string>("")
-  const [todos, setTodos] = useState<string[]>([])
+  const [todos, setTodos] = useState<TodoI[]>([])
 
 
   const userInputHandler = (enteredText: string): void => {
@@ -13,22 +16,27 @@ export default function App() {
   }
 
   const addTodoHandler = () => {
-    setTodos((prevTodos) => [...prevTodos, userInput])
-    setUserInput("")
+    if (userInput.trim().length !== 0) {
+      setTodos((prevTodos) => [...prevTodos, { text: userInput, id: Math.random() }])
+      setUserInput("")
+    } else return;
+  }
+
+  const deleteHandler = (id: number) => {
+    setTodos(todos.filter(item => item.id !== id))
   }
 
   return (
     <View style={styles.container}>
 
-      <View style={styles.goalBlock}>
-        <TextInput style={styles.input} placeholder='Write your goal' onChangeText={userInputHandler} value={userInput} />
-        <Button title='Add goal' onPress={addTodoHandler} />
-      </View>
+      <Input onAddTodo={addTodoHandler} userInputHandler={userInputHandler} userInput={userInput} />
 
       <View style={{ borderTopWidth: 1, paddingTop: 12 }}>
-        {todos.map((item) => (
-          <Text key={Math.random()}>{item}</Text>
-        ))}
+        <FlatList style={styles.todosItems} data={todos} alwaysBounceVertical={false} renderItem={item => {
+          return (
+            <InputItem text={item.item.text} id={item.item.id} onDelete={deleteHandler} />
+          )
+        }} />
       </View>
 
       <StatusBar style="auto" />
@@ -45,15 +53,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '80%',
   },
-  input: {
-    width: '80%',
-    borderWidth: 1,
-    paddingLeft: '4%',
-  },
-  goalBlock: {
-    gap: 12,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
+  todosItems: {
+    flexDirection: "column",
+  }
 });
